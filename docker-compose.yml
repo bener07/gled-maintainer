@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build: 
+      context: ./app
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
+    ports:
+      - "8080:8080"
+    networks:
+      - frontend
+      - backend
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_USER=arquitetododiabo
+      - DATABASE_PASSWORD=fallenangel69#
+      - DATABASE_HOST=db
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=mydb
+    networks:
+      - backend
+
+  db:
+    image: mysql:5.7
+    volumes:
+      - ./db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: asquitetomasoquista
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: arquitetododiabo
+      MYSQL_PASSWORD: fallenangel69#
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
