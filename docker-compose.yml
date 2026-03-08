@@ -11,6 +11,8 @@ services:
       - frontend
       - backend
 
+
+
   api:
     build:
       context: ./api
@@ -24,9 +26,11 @@ services:
       - DATABASE_PASSWORD=fallenangel69#
       - DATABASE_HOST=db
       - DATABASE_PORT=3306
-      - DATABASE_NAME=mydb
+      - DATABASE_NAME=templodeatenas
     networks:
       - backend
+
+
 
   db:
     image: mysql:5.7
@@ -34,7 +38,7 @@ services:
       - ./db_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: asquitetomasoquista
-      MYSQL_DATABASE: mydb
+      MYSQL_DATABASE: templodeatenas
       MYSQL_USER: arquitetododiabo
       MYSQL_PASSWORD: fallenangel69#
     ports:
@@ -43,8 +47,48 @@ services:
       - backend
 
 
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+        - '8001:80'
+    networks:
+      - frontend
+      - backend
+    environment:
+        - PMA_ARBITRARY=1
+
+
+
+  vpn_connector:
+    container_name: twingate-crazy-peacock
+    image: twingate/connector:latest
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      - TWINGATE_NETWORK=gled
+      - TWINGATE_ACCESS_TOKEN=eyJhbGciOiJFUzI1NiIsImtpZCI6IjR4N3prMDVpc1QwOUJwZUg3ZExrLVpnX2FUSUs0dm5BV2k0VGtEMUJrSEEiLCJ0eXAiOiJEQVQifQ.eyJudCI6IkFOIiwiYWlkIjoiNTIxOTEwIiwiZGlkIjoiMjIyNzc1NCIsInJudyI6MTc0NzQwNTE3NywianRpIjoiZDNlOTcxNTYtYzg0MC00NDBmLWE3ODktZGM3OWFjMmNhMzMwIiwiaXNzIjoidHdpbmdhdGUiLCJhdWQiOiJnbGVkIiwiZXhwIjoxNzQ3NDA4NDExLCJpYXQiOjE3NDc0MDQ4MTEsInZlciI6IjQiLCJ0aWQiOiIxNTM0MzciLCJybmV0aWQiOiIyMDEyMDgifQ.zNo5ytKnrm5RFjmOmhPBv96a6RS9cNJhe1oHup9l7htljIhrsqF2fVSpVUKNQHZS1m8r-U1hC1wUI3dcsdjywg
+      - TWINGATE_REFRESH_TOKEN=l6dFKnrqg7GrHuDfq2juSRl82jpAW_klmrijJwm1QnJmkiiK4cvIgHkQa7ReDgIWJyUp3wRoU6d_4a84RVOF1xy9LWayB9BVIsnWCeCjf-iX9p3f9aPhs1-Sng1T2Q1UEqDKeg
+      - TWINGATE_LOG_ANALYTICS=v2
+      - TWINGATE_LOG_LEVEL=3
+    networks:
+      - backend
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+
+
+
 networks:
   frontend:
+    name: gled_frontend_network
     driver: bridge
   backend:
     driver: bridge
+    name: gled_vpn_bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.69.0/24
+    driver_opts:
+      com.docker.network.bridge.name: gled_vpn_bridge
