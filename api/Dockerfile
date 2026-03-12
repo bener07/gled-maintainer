@@ -1,7 +1,21 @@
-FROM golang:alpine3.21
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-LABEL maitainer="Bener07 at github.com/bener07"
+COPY go.mod go.sum ./
+RUN go mod download
 
-CMD ["go", "run", "server.go"]
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+
+FROM alpine:3.21
+
+RUN apk --no-cache add ca-certificates tzdata
+
+WORKDIR /app
+
+COPY --from=builder /app/server .
+
+EXPOSE 8000
+
+CMD ["./server"]

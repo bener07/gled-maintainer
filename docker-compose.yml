@@ -1,75 +1,75 @@
 services:
   frontend:
-    build: 
+    build:
       context: ./app
       dockerfile: Dockerfile
-    volumes:
-      - ./app:/app
     ports:
-      - "8080:8080"
+      - "8080:80"
+    depends_on:
+      - api
     networks:
       - frontend
       - backend
-
-
 
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    volumes:
-      - ./api:/app
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_USER=arquitetododiabo
-      - DATABASE_PASSWORD=fallenangel69#
+      - PORT=${PORT:-8000}
+      - API_SECRET=${API_SECRET}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - DATABASE_HOST=db
       - DATABASE_PORT=3306
-      - DATABASE_NAME=templodeatenas
+      - DATABASE_NAME=${DATABASE_NAME}
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - backend
-
-
 
   db:
     image: mysql:5.7
     volumes:
-      - ./db_data:/var/lib/mysql
+      - db_data:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: asquitetomasoquista
-      MYSQL_DATABASE: templodeatenas
-      MYSQL_USER: arquitetododiabo
-      MYSQL_PASSWORD: fallenangel69#
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - backend
-
-
 
   phpmyadmin:
     image: phpmyadmin
     restart: always
     ports:
-        - '8001:80'
+      - "8001:80"
     networks:
       - frontend
       - backend
     environment:
-        - PMA_ARBITRARY=1
-
-
+      - PMA_ARBITRARY=1
 
   vpn_connector:
-    container_name: twingate-crazy-peacock
+    container_name: twingate-connector
     image: twingate/connector:latest
     restart: unless-stopped
     pull_policy: always
     environment:
-      - TWINGATE_NETWORK=gled
-      - TWINGATE_ACCESS_TOKEN=eyJhbGciOiJFUzI1NiIsImtpZCI6IjR4N3prMDVpc1QwOUJwZUg3ZExrLVpnX2FUSUs0dm5BV2k0VGtEMUJrSEEiLCJ0eXAiOiJEQVQifQ.eyJudCI6IkFOIiwiYWlkIjoiNTIxOTEwIiwiZGlkIjoiMjIyNzc1NCIsInJudyI6MTc0NzQwNTE3NywianRpIjoiZDNlOTcxNTYtYzg0MC00NDBmLWE3ODktZGM3OWFjMmNhMzMwIiwiaXNzIjoidHdpbmdhdGUiLCJhdWQiOiJnbGVkIiwiZXhwIjoxNzQ3NDA4NDExLCJpYXQiOjE3NDc0MDQ4MTEsInZlciI6IjQiLCJ0aWQiOiIxNTM0MzciLCJybmV0aWQiOiIyMDEyMDgifQ.zNo5ytKnrm5RFjmOmhPBv96a6RS9cNJhe1oHup9l7htljIhrsqF2fVSpVUKNQHZS1m8r-U1hC1wUI3dcsdjywg
-      - TWINGATE_REFRESH_TOKEN=l6dFKnrqg7GrHuDfq2juSRl82jpAW_klmrijJwm1QnJmkiiK4cvIgHkQa7ReDgIWJyUp3wRoU6d_4a84RVOF1xy9LWayB9BVIsnWCeCjf-iX9p3f9aPhs1-Sng1T2Q1UEqDKeg
+      - TWINGATE_NETWORK=${TWINGATE_NETWORK}
+      - TWINGATE_ACCESS_TOKEN=${TWINGATE_ACCESS_TOKEN}
+      - TWINGATE_REFRESH_TOKEN=${TWINGATE_REFRESH_TOKEN}
       - TWINGATE_LOG_ANALYTICS=v2
       - TWINGATE_LOG_LEVEL=3
     networks:
@@ -77,7 +77,8 @@ services:
     sysctls:
       net.ipv4.ping_group_range: "0 2147483647"
 
-
+volumes:
+  db_data:
 
 networks:
   frontend:

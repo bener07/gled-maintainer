@@ -1,7 +1,18 @@
-FROM node:alpine3.21
-
-RUN npm install -g @vue/cli @vue/cli-service
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-CMD ["npm", "run", "serve"]
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
